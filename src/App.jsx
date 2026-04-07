@@ -462,17 +462,13 @@ export default function App() {
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
   // ─── Views ─────────────────────────────────────────────────────────────
-  if (view === 'loading') return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: G.gold, fontStyle: 'italic' }}>Loading...</div>
+  if (view === 'loading') return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: "'Palatino Linotype',serif", color: '#C8A96E', fontStyle: 'italic' }}>Loading...</div>
 
   const pA = profile?.name ?? 'You'
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
 
-  // Show landing page if not yet accepted/logged in and no invite token
-  if (view === 'loading') return <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:"'Palatino Linotype',serif",color:'#C8A96E',fontStyle:'italic'}}>Loading...</div>
-
-  const showLanding = view === 'auth' && !inviteToken && !isResetMode
-  if (showLanding) return <Landing onSignUp={() => setAuthTab('signup')} onLogin={() => setAuthTab('login')} />
+  if (view === 'auth' && !inviteToken && !isResetMode) return <Landing onSignUp={() => setAuthTab('signup')} onLogin={() => setAuthTab('login')} />
 
   const AppContent = () => (
     <>
