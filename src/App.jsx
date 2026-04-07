@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import Landing from './Landing.jsx'
 import { sb, callEmail, genToken } from './supabase.js'
 
 // ─── Styles ────────────────────────────────────────────────────────────────
@@ -165,7 +164,16 @@ const Stepper = ({ steps, current }) => (
 
 // ─── Main App ──────────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState('loading')
+  const params = new URLSearchParams(window.location.search)
+  const initialToken = params.get('token')
+  const initialReset = params.get('type') === 'recovery'
+  const initialTab = params.get('tab') === 'signup' ? 'signup' : 'login'
+
+  const [view, setView] = useState(() => {
+    if (initialReset) return 'reset-password'
+    if (initialToken) return 'invite-signup'
+    return 'auth'
+  })
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [partnership, setPartnership] = useState(null)
@@ -174,11 +182,10 @@ export default function App() {
   const [activeRound, setActiveRound] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [authTab, setAuthTab] = useState('login')
+  const [authTab, setAuthTab] = useState(initialTab)
   const [roundStep, setRoundStep] = useState(0)
-  const [inviteToken, setInviteToken] = useState(null)
+  const [inviteToken] = useState(initialToken)
   const [invitePartnerName, setInvitePartnerName] = useState('')
-  const [isResetMode, setIsResetMode] = useState(false)
 
   // Review state
   const [revStart, setRevStart] = useState('')
@@ -187,8 +194,6 @@ export default function App() {
   const [revStop, setRevStop] = useState('')
   const [revStopReas, setRevStopReas] = useState('')
   const [revStopWill, setRevStopWill] = useState('')
-
-  const params = new URLSearchParams(window.location.search)
 
   const loadUserData = useCallback(async (uid) => {
     const { data: prof } = await sb.from('profiles').select('*').eq('id', uid).single()
@@ -217,27 +222,25 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const token = params.get('token')
-    const resetMode = params.get('type') === 'recovery'
-    if (token) setInviteToken(token)
-    if (resetMode) { setIsResetMode(true); setView('reset-password'); return }
+    // Password recovery — stay on reset-password view, no session lookup needed.
+    if (initialReset) return
 
-    sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        if (token) {
-          // Load invite info
-          const { data } = await sb.from('partnerships')
-            .select('*, profiles!partnerships_partner_a_id_fkey(name)')
-            .eq('invite_token', token).single()
+    // Invite flow — fetch the inviter's name for the welcome card.
+    if (initialToken) {
+      sb.from('partnerships')
+        .select('*, profiles!partnerships_partner_a_id_fkey(name)')
+        .eq('invite_token', initialToken).single()
+        .then(({ data }) => {
           if (data) setInvitePartnerName(data.profiles?.name ?? 'Your partner')
-          setView('invite-signup')
-        } else {
-          setView('landing')
-        }
-        return
+        })
+    }
+
+    // If a session already exists, jump straight to the dashboard.
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUser(session.user)
+        loadUserData(session.user.id)
       }
-      setUser(session.user)
-      await loadUserData(session.user.id)
     })
   }, [])
 
@@ -314,9 +317,7 @@ export default function App() {
 
   const doLogout = async () => {
     await sb.auth.signOut()
-    setUser(null); setProfile(null); setPartnership(null)
-    setPartnerProfile(null); setRounds([]); setActiveRound(null)
-    setView('landing'); setAuthTab('login'); setError('')
+    window.location.href = '/'
   }
 
   const sendInvite = async () => {
@@ -467,11 +468,6 @@ export default function App() {
   const pA = profile?.name ?? 'You'
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
-
-  // Show landing whenever view is 'landing' — explicit opt-in to the auth form via CTA
-  if (view === 'landing') {
-    return <Landing onSignUp={() => { setAuthTab('signup'); setView('auth'); }} onLogin={() => { setAuthTab('login'); setView('auth'); }} />
-  }
 
   const AppContent = () => (
     <>
