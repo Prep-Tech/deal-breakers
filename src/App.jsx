@@ -179,6 +179,7 @@ export default function App() {
   const [inviteToken, setInviteToken] = useState(null)
   const [invitePartnerName, setInvitePartnerName] = useState('')
   const [isResetMode, setIsResetMode] = useState(false)
+  const [wantsAuth, setWantsAuth] = useState(false)
 
   // Review state
   const [revStart, setRevStart] = useState('')
@@ -468,7 +469,10 @@ export default function App() {
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
 
-  if (view === 'auth' && !inviteToken && !isResetMode) return <Landing onSignUp={() => setAuthTab('signup')} onLogin={() => setAuthTab('login')} />
+  // Show landing if: not logged in, no invite token, not a password reset, and user hasn't clicked sign up
+  if (!user && !inviteToken && !isResetMode && !wantsAuth) {
+    return <Landing onSignUp={() => { setWantsAuth(true); setAuthTab('signup'); }} onLogin={() => { setWantsAuth(true); setAuthTab('login'); }} />
+  }
 
   const AppContent = () => (
     <>
