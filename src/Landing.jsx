@@ -6,9 +6,9 @@ const G = {
   green: '#A8C5A0', blue: '#7EB8C9',
 }
 
-const APP_URL = '/app'
 
-export default function Landing() {
+
+export default function Landing({ onSignUp, onLogin }) {
   const stepsRef = useRef([])
   const mockupsRef = useRef([])
   const treeRef = useRef(null)
@@ -78,7 +78,7 @@ export default function Landing() {
         <div style={{ color: G.gold, fontSize: '1rem', letterSpacing: '0.1em' }}>Deal Breakers</div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <a href="#how-it-works" style={{ color: '#888', fontSize: '0.8rem', letterSpacing: '0.15em', textDecoration: 'none' }}>HOW IT WORKS</a>
-          <a href={APP_URL} className="btn-gold" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>SIGN UP FREE</a>
+          <a href="#" onClick={(e)=>{e.preventDefault();onSignUp&&onSignUp();}} className="btn-gold" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>SIGN UP FREE</a>
         </div>
       </nav>
 
@@ -93,7 +93,7 @@ export default function Landing() {
             Starting and stopping behaviours that compromise your relationship — addressed with structure, honesty, and respect.
           </p>
           <div className="hero-anim-2" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href={APP_URL} className="btn-gold">SIGN UP FREE →</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onSignUp&&onSignUp();}} className="btn-gold">SIGN UP FREE →</a>
             <a href="#how-it-works" className="btn-outline">HOW IT WORKS</a>
           </div>
           <div className="hero-anim-3" style={{ marginTop: '3rem', display: 'flex', gap: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -313,7 +313,7 @@ export default function Landing() {
         <div style={{ fontSize: '0.68rem', letterSpacing: '0.35em', color: '#555', marginBottom: '1rem' }}>FREE TO USE — NO SUBSCRIPTION</div>
         <h2 style={{ color: G.gold, fontSize: 'clamp(2rem,7vw,3.8rem)', fontWeight: 400, marginBottom: '1rem', lineHeight: 1.1 }}>Start your first round today.</h2>
         <p style={{ color: '#888', fontStyle: 'italic', fontSize: '1rem', marginBottom: '2.5rem', lineHeight: 1.7 }}>No subscription. No therapist required. Just honesty and a structure that holds.</p>
-        <a href={APP_URL} className="btn-gold" style={{ fontSize: '0.9rem', padding: '1rem 2.8rem' }}>SIGN UP FREE →</a>
+        <a href="#" onClick={(e)=>{e.preventDefault();onSignUp&&onSignUp();}} className="btn-gold" style={{ fontSize: '0.9rem', padding: '1rem 2.8rem' }}>SIGN UP FREE →</a>
       </div>
 
       {/* FOOTER */}
@@ -324,4 +324,3 @@ export default function Landing() {
     </div>
   )
 }
-
