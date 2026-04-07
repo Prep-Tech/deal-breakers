@@ -179,7 +179,6 @@ export default function App() {
   const [inviteToken, setInviteToken] = useState(null)
   const [invitePartnerName, setInvitePartnerName] = useState('')
   const [isResetMode, setIsResetMode] = useState(false)
-  const [wantsAuth, setWantsAuth] = useState(false)
 
   // Review state
   const [revStart, setRevStart] = useState('')
@@ -233,7 +232,7 @@ export default function App() {
           if (data) setInvitePartnerName(data.profiles?.name ?? 'Your partner')
           setView('invite-signup')
         } else {
-          setView('auth')
+          setView('landing')
         }
         return
       }
@@ -317,7 +316,7 @@ export default function App() {
     await sb.auth.signOut()
     setUser(null); setProfile(null); setPartnership(null)
     setPartnerProfile(null); setRounds([]); setActiveRound(null)
-    setView('auth'); setAuthTab('login'); setError('')
+    setView('landing'); setAuthTab('login'); setError('')
   }
 
   const sendInvite = async () => {
@@ -469,9 +468,9 @@ export default function App() {
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
 
-  // Show landing if: not logged in, no invite token, not a password reset, and user hasn't clicked sign up
-  if (!user && !inviteToken && !isResetMode && !wantsAuth) {
-    return <Landing onSignUp={() => { setWantsAuth(true); setAuthTab('signup'); }} onLogin={() => { setWantsAuth(true); setAuthTab('login'); }} />
+  // Show landing whenever view is 'landing' — explicit opt-in to the auth form via CTA
+  if (view === 'landing') {
+    return <Landing onSignUp={() => { setAuthTab('signup'); setView('auth'); }} onLogin={() => { setAuthTab('login'); setView('auth'); }} />
   }
 
   const AppContent = () => (
