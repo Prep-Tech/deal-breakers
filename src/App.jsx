@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Landing from './Landing.jsx'
 import { sb, callEmail, genToken } from './supabase.js'
 
@@ -189,9 +188,7 @@ export default function App() {
   const [revStopReas, setRevStopReas] = useState('')
   const [revStopWill, setRevStopWill] = useState('')
 
-  const navigate = useNavigate()
-  const location = useLocation()
-  const params = new URLSearchParams(location.search)
+  const params = new URLSearchParams(window.location.search)
 
   const loadUserData = useCallback(async (uid) => {
     const { data: prof } = await sb.from('profiles').select('*').eq('id', uid).single()
@@ -217,9 +214,6 @@ export default function App() {
     }
     setView('dashboard')
     setLoading(false)
-    if (location.pathname === '/' || location.pathname === '/invite') {
-      navigate('/app')
-    }
   }, [])
 
   useEffect(() => {
@@ -473,6 +467,12 @@ export default function App() {
   const pA = profile?.name ?? 'You'
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
+
+  // Show landing page if not yet accepted/logged in and no invite token
+  if (view === 'loading') return <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:"'Palatino Linotype',serif",color:'#C8A96E',fontStyle:'italic'}}>Loading...</div>
+
+  const showLanding = view === 'auth' && !inviteToken && !isResetMode
+  if (showLanding) return <Landing onSignUp={() => setAuthTab('signup')} onLogin={() => setAuthTab('login')} />
 
   const AppContent = () => (
     <>
@@ -929,12 +929,5 @@ export default function App() {
     </>
   )
 
-  return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/invite" element={<AppContent />} />
-      <Route path="/app" element={<AppContent />} />
-      <Route path="*" element={<Landing />} />
-    </Routes>
-  )
+  return <AppContent />
 }
