@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import Landing from './Landing.jsx'
 import { sb, callEmail, genToken } from './supabase.js'
 
 // ─── Styles ────────────────────────────────────────────────────────────────
@@ -187,7 +189,9 @@ export default function App() {
   const [revStopReas, setRevStopReas] = useState('')
   const [revStopWill, setRevStopWill] = useState('')
 
-  const params = new URLSearchParams(window.location.search)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
 
   const loadUserData = useCallback(async (uid) => {
     const { data: prof } = await sb.from('profiles').select('*').eq('id', uid).single()
@@ -213,6 +217,9 @@ export default function App() {
     }
     setView('dashboard')
     setLoading(false)
+    if (location.pathname === '/' || location.pathname === '/invite') {
+      navigate('/app')
+    }
   }, [])
 
   useEffect(() => {
@@ -467,7 +474,7 @@ export default function App() {
   const pB = partnerProfile?.name ?? 'Your Partner'
   const uid = user?.id
 
-  return (
+  const AppContent = () => (
     <>
       <style>{css}</style>
 
@@ -920,5 +927,14 @@ export default function App() {
         </div>
       </div>
     </>
+  )
+
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/invite" element={<AppContent />} />
+      <Route path="/app" element={<AppContent />} />
+      <Route path="*" element={<Landing />} />
+    </Routes>
   )
 }
