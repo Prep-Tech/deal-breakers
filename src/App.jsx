@@ -288,9 +288,13 @@ export default function App() {
     if (err) { setError(err.message); setLoading(false); return }
     if (!data.session) { setError('Account created — please log in.'); setLoading(false); return }
     setUser(data.user)
-    // Link to partnership
+    // Link to partnership and backfill any draft rounds the inviter started
+    // before we existed.
     const { data: part } = await sb.from('partnerships').select('*').eq('invite_token', inviteToken).single()
-    if (part) await sb.from('partnerships').update({ partner_b_id: data.user.id, status: 'active' }).eq('id', part.id)
+    if (part) {
+      await sb.from('partnerships').update({ partner_b_id: data.user.id, status: 'active' }).eq('id', part.id)
+      await sb.from('rounds').update({ responder_id: data.user.id }).eq('partnership_id', part.id).is('responder_id', null)
+    }
     await loadUserData(data.user.id)
   }
 
@@ -337,8 +341,22 @@ export default function App() {
     await loadUserData(user.id)
   }
 
+  const revokeInvite = async () => {
+    if (!partnership || partnership.status !== 'pending') return
+    if (!confirm('Revoke this invite? Any draft rounds you have started will also be deleted.')) return
+    setLoading(true); setError('')
+    const { error: err } = await sb.from('partnerships').delete().eq('id', partnership.id)
+    if (err) { setError(err.message); setLoading(false); return }
+    await loadUserData(user.id)
+    setLoading(false)
+  }
+
   const startNewRound = async (requesterId) => {
-    const responderId = requesterId === partnership.partner_a_id ? partnership.partner_b_id : partnership.partner_a_id
+    // While the invite is pending the responder is unknown — leave it null
+    // and backfill it when the partner accepts the invite (see doInviteSignup).
+    const responderId = partnership.partner_b_id
+      ? (requesterId === partnership.partner_a_id ? partnership.partner_b_id : partnership.partner_a_id)
+      : null
     const roundNum = (rounds?.length ?? 0) + 1
     const { data, error: err } = await sb.from('rounds').insert({
       partnership_id: partnership.id,
@@ -385,6 +403,7 @@ export default function App() {
 
   const submitRound = async () => {
     if (!activeRound.start_request || !activeRound.stop_request) return setError('Both requests must be filled in.')
+    if (!activeRound.responder_id) return setError('Your partner needs to accept the invite before you can submit this round.')
     setLoading(true); setError('')
     await sb.from('rounds').update({ status: 'submitted', submitted_at: new Date().toISOString() }).eq('id', activeRound.id)
     const responder = activeRound.responder_id === partnership.partner_a_id ? partnership.partner_a : partnership.partner_b
@@ -590,7 +609,7 @@ export default function App() {
                     <div style={{ width: 42, height: 42, borderRadius: '50%', background: partnerProfile ? G.dark : '#aaa', color: G.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
                       {partnerProfile ? (partnerProfile.name?.[0] ?? '?').toUpperCase() : '?'}
                     </div>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>{partnerProfile?.name ?? partnership.invite_email}</div>
                       <div style={{ fontSize: '0.8rem', color: '#888' }}>{partnerProfile?.email ?? 'Invite pending'}</div>
                       <span style={{
@@ -601,15 +620,29 @@ export default function App() {
                       }}>{partnerProfile ? 'CONNECTED' : 'INVITE PENDING'}</span>
                     </div>
                   </div>
+                  {!partnerProfile && (
+                    <div style={{ marginTop: '1rem' }}>
+                      <Btn variant="outline" small disabled={loading} onClick={revokeInvite}>
+                        {loading ? '...' : 'REVOKE INVITE'}
+                      </Btn>
+                    </div>
+                  )}
                 </Card>
 
                 {/* Start round buttons */}
-                {partnerProfile && (
+                {partnerProfile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.2rem' }}>
                     <Btn onClick={() => startNewRound(uid)}>+ NEW ROUND — I GO FIRST</Btn>
                     <Btn variant="outline" onClick={() => startNewRound(partnerProfile.id)}>
                       + NEW ROUND — {pB.toUpperCase()} GOES FIRST
                     </Btn>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.2rem' }}>
+                    <Btn onClick={() => startNewRound(uid)}>+ START DRAFTING YOUR FIRST ROUND</Btn>
+                    <p style={{ fontSize: '0.78rem', color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: '0.2rem' }}>
+                      You can prepare your START and STOP requests now. You'll be able to submit them once your partner accepts the invite.
+                    </p>
                   </div>
                 )}
 
@@ -657,8 +690,10 @@ export default function App() {
                     })}
                   </>
                 )}
-                {rounds.length === 0 && partnerProfile && (
-                  <div style={{ textAlign: 'center', color: '#aaa', fontStyle: 'italic', padding: '2rem 0' }}>No rounds yet. Start your first round above.</div>
+                {rounds.length === 0 && (
+                  <div style={{ textAlign: 'center', color: '#aaa', fontStyle: 'italic', padding: '2rem 0' }}>
+                    {partnerProfile ? 'No rounds yet. Start your first round above.' : 'No drafts yet. Start preparing your first round above.'}
+                  </div>
                 )}
               </>
             )}
@@ -728,10 +763,19 @@ export default function App() {
                 </DescBox>
                 {activeRound?.start_request && <ReqBlock text={activeRound.start_request} type="start" />}
                 {activeRound?.stop_request && <ReqBlock text={activeRound.stop_request} type="stop" />}
+                {!activeRound?.responder_id && (
+                  <Card style={{ background: '#FDF6EC', border: `1px dashed ${G.gold}`, marginTop: '1rem' }}>
+                    <p style={{ fontSize: '0.9rem', color: '#7a5a1a', lineHeight: 1.7, margin: 0 }}>
+                      <strong>Waiting on your partner —</strong> your invite is still pending. You can keep editing this draft, and you'll be able to submit it as soon as your partner accepts the invite.
+                    </p>
+                  </Card>
+                )}
                 <ErrorMsg msg={error} />
                 <div style={{ display: 'flex', gap: '0.8rem', marginTop: '1rem' }}>
                   <Btn variant="outline" onClick={() => setRoundStep(1)}>← BACK</Btn>
-                  <Btn disabled={loading} onClick={submitRound}>{loading ? 'Submitting...' : 'SUBMIT TO PARTNER →'}</Btn>
+                  <Btn disabled={loading || !activeRound?.responder_id} onClick={submitRound}>
+                    {loading ? 'Submitting...' : !activeRound?.responder_id ? 'AWAITING PARTNER' : 'SUBMIT TO PARTNER →'}
+                  </Btn>
                 </div>
               </>
             )}

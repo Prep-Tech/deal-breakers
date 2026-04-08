@@ -11,8 +11,6 @@ const G = {
 export default function Landing({ onSignUp, onLogin }) {
   const stepsRef = useRef([])
   const mockupsRef = useRef([])
-  const treeRef = useRef(null)
-  const treeAnimated = useRef(false)
 
   useEffect(() => {
     const io = new IntersectionObserver((entries) => {
@@ -27,32 +25,8 @@ export default function Landing({ onSignUp, onLogin }) {
     stepsRef.current.forEach(el => el && io.observe(el))
     mockupsRef.current.forEach(el => el && io.observe(el))
 
-    const treeIo = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !treeAnimated.current) {
-        treeAnimated.current = true
-        animateTree()
-      }
-    }, { threshold: 0.2 })
-
-    if (treeRef.current) treeIo.observe(treeRef.current)
-
-    return () => { io.disconnect(); treeIo.disconnect() }
+    return () => { io.disconnect() }
   }, [])
-
-  function animateTree() {
-    const lines = document.querySelectorAll('.tree-line')
-    const nodes = document.querySelectorAll('.tree-node')
-    lines.forEach((l, i) => {
-      const len = l.getTotalLength ? l.getTotalLength() : 200
-      l.style.strokeDasharray = len
-      l.style.strokeDashoffset = len
-      l.style.transition = `stroke-dashoffset 0.5s ease ${i * 0.08}s`
-      requestAnimationFrame(() => { l.style.strokeDashoffset = '0' })
-    })
-    nodes.forEach((n, i) => {
-      setTimeout(() => { n.style.opacity = '1' }, i * 80 + 200)
-    })
-  }
 
   const fadeInUp = { opacity: 0, transform: 'translateY(20px)', transition: 'all 0.5s ease' }
 
@@ -69,8 +43,6 @@ export default function Landing({ onSignUp, onLogin }) {
         .btn-outline { background:transparent; color:${G.gold}; border:1px solid ${G.gold}; padding:0.9rem 2.2rem; font-size:0.85rem; letter-spacing:0.2em; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block; transition:all 0.2s; }
         .btn-outline:hover { background:${G.gold}; color:${G.dark}; }
         .feature-card:hover { border-color:${G.gold}; }
-        .tree-node { opacity:0; transition:opacity 0.4s ease; }
-        .tree-line { }
       `}</style>
 
       {/* NAV */}
@@ -78,6 +50,7 @@ export default function Landing({ onSignUp, onLogin }) {
         <div style={{ color: G.gold, fontSize: '1rem', letterSpacing: '0.1em' }}>Deal Breakers</div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <a href="#how-it-works" style={{ color: '#888', fontSize: '0.8rem', letterSpacing: '0.15em', textDecoration: 'none' }}>HOW IT WORKS</a>
+          <a href="#" onClick={(e)=>{e.preventDefault();onLogin&&onLogin();}} style={{ color: G.gold, fontSize: '0.75rem', letterSpacing: '0.15em', textDecoration: 'none', padding: '0.5rem 1rem', border: `1px solid ${G.gold}` }}>LOG IN</a>
           <a href="#" onClick={(e)=>{e.preventDefault();onSignUp&&onSignUp();}} className="btn-gold" style={{ padding: '0.5rem 1.2rem', fontSize: '0.75rem' }}>SIGN UP FREE</a>
         </div>
       </nav>
@@ -161,59 +134,6 @@ export default function Landing({ onSignUp, onLogin }) {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* DECISION TREE */}
-      <div style={{ background: G.dark, padding: '5rem 1.5rem' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ fontSize: '0.68rem', letterSpacing: '0.3em', color: G.gold, textAlign: 'center', marginBottom: '0.8rem' }}>THE DECISION TREE</div>
-          <h2 style={{ color: G.gold, fontSize: 'clamp(1.6rem,4vw,2.4rem)', fontWeight: 400, textAlign: 'center', marginBottom: '0.6rem' }}>What happens after a request is made</h2>
-          <p style={{ color: '#888', fontStyle: 'italic', textAlign: 'center', fontSize: '1rem', marginBottom: '3rem', lineHeight: 1.7 }}>Every request follows a clear, fair path — no ambiguity, no dead ends.</p>
-          <div ref={treeRef} style={{ overflowX: 'auto' }}>
-            <svg viewBox="0 0 860 530" width="100%" style={{ display: 'block', maxWidth: 860, margin: '0 auto' }}>
-              <defs>
-                <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                  <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </marker>
-              </defs>
-              <g stroke-width="1.5" fill="none" markerEnd="url(#arr2)">
-                {[
-                  { x1:430,y1:72,x2:185,y2:148,stroke:G.gold },
-                  { x1:430,y1:72,x2:430,y2:148,stroke:G.gold },
-                  { x1:430,y1:72,x2:675,y2:148,stroke:G.gold },
-                  { x1:185,y1:200,x2:185,y2:268,stroke:G.green },
-                  { x1:430,y1:200,x2:430,y2:268,stroke:G.gold },
-                  { x1:675,y1:200,x2:675,y2:268,stroke:'#C9A0A0' },
-                  { x1:185,y1:320,x2:185,y2:388,stroke:G.green },
-                  { x1:430,y1:320,x2:325,y2:388,stroke:G.gold },
-                  { x1:430,y1:320,x2:535,y2:388,stroke:'#C9A0A0' },
-                  { x1:185,y1:440,x2:100,y2:490,stroke:G.green },
-                  { x1:185,y1:440,x2:270,y2:490,stroke:'#C9A0A0' },
-                ].map((l, i) => (
-                  <line key={i} className="tree-line" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.stroke} strokeWidth="1.5" markerEnd="url(#arr2)" pathLength="1" />
-                ))}
-              </g>
-
-              {/* Nodes */}
-              <g className="tree-node"><rect x="300" y="20" width="260" height="52" rx="2" fill={G.dark} stroke={G.gold} strokeWidth="1.5"/><text x="430" y="41" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="12" fill={G.gold} letterSpacing="2">PARTNER A SUBMITS</text><text x="430" y="60" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill="#888" fontStyle="italic">START + STOP requests</text></g>
-
-              <g className="tree-node"><rect x="95" y="148" width="180" height="52" rx="2" fill="#EDF7ED" stroke={G.green} strokeWidth="1"/><text x="185" y="169" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="12" fill="#2d6a2d" letterSpacing="1">ACCEPTED</text><text x="185" y="187" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#5a9a5a" fontStyle="italic">Partner B commits</text></g>
-              <g className="tree-node"><rect x="340" y="148" width="180" height="52" rx="2" fill="#FDF6EC" stroke={G.gold} strokeWidth="1"/><text x="430" y="169" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="12" fill="#7a5a1a" letterSpacing="1">COMPROMISE</text><text x="430" y="187" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#996633" fontStyle="italic">Partner B proposes terms</text></g>
-              <g className="tree-node"><rect x="585" y="148" width="180" height="52" rx="2" fill="#FDF0F0" stroke="#C9A0A0" strokeWidth="1"/><text x="675" y="169" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="12" fill="#7a3a3a" letterSpacing="1">REJECTED</text><text x="675" y="187" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#aa6060" fontStyle="italic">Reason required</text></g>
-
-              <g className="tree-node"><rect x="95" y="268" width="180" height="52" rx="2" fill={G.dark} stroke={G.green} strokeWidth="1"/><text x="185" y="289" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill={G.green} letterSpacing="1">ACTION PLAN</text><text x="185" y="307" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#667" fontStyle="italic">Steps + deadline set</text></g>
-              <g className="tree-node"><rect x="340" y="268" width="180" height="52" rx="2" fill={G.dark} stroke={G.gold} strokeWidth="1"/><text x="430" y="289" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill={G.gold} letterSpacing="1">NEGOTIATE</text><text x="430" y="307" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#667" fontStyle="italic">Partner A accepts or not</text></g>
-              <g className="tree-node"><rect x="585" y="268" width="180" height="52" rx="2" fill={G.dark} stroke="#C9A0A0" strokeWidth="1"/><text x="675" y="289" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill="#C9A0A0" letterSpacing="1">DISCUSS</text><text x="675" y="307" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#667" fontStyle="italic">Deeper conversation</text></g>
-
-              <g className="tree-node"><rect x="95" y="388" width="180" height="52" rx="2" fill={G.dark} stroke={G.blue} strokeWidth="1"/><text x="185" y="409" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill={G.blue} letterSpacing="1">DEADLINE DATE</text><text x="185" y="427" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#667" fontStyle="italic">Daily reminders sent</text></g>
-              <g className="tree-node"><rect x="240" y="388" width="170" height="52" rx="2" fill="#EDF7ED" stroke={G.green} strokeWidth="1"/><text x="325" y="409" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill="#2d6a2d">A accepts terms</text><text x="325" y="427" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#5a9a5a" fontStyle="italic">action plan follows</text></g>
-              <g className="tree-node"><rect x="450" y="388" width="170" height="52" rx="2" fill="#FDF0F0" stroke="#C9A0A0" strokeWidth="1"/><text x="535" y="409" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="11" fill="#7a3a3a">A rejects terms</text><text x="535" y="427" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#aa6060" fontStyle="italic">discuss further</text></g>
-
-              <g className="tree-node"><rect x="30" y="490" width="140" height="28" rx="2" fill="#EDF7ED" stroke={G.green} strokeWidth="1"/><text x="100" y="508" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#2d6a2d">Fulfilled ✓</text></g>
-              <g className="tree-node"><rect x="200" y="490" width="140" height="28" rx="2" fill="#FDF6EC" stroke={G.gold} strokeWidth="1"/><text x="270" y="508" textAnchor="middle" fontFamily="Palatino Linotype,Palatino,Georgia,serif" fontSize="10" fill="#7a5a1a">Retry or reassess</text></g>
-            </svg>
-          </div>
         </div>
       </div>
 
