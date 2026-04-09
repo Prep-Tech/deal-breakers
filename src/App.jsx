@@ -289,13 +289,8 @@ export default function App() {
     if (err) { setError(err.message); setLoading(false); return }
     if (!data.session) { setError('Account created — please log in.'); setLoading(false); return }
     setUser(data.user)
-    // Link to partnership and backfill any draft rounds the inviter started
-    // before we existed.
-    const { data: part } = await sb.from('partnerships').select('*').eq('invite_token', inviteToken).single()
-    if (part) {
-      await sb.from('partnerships').update({ partner_b_id: data.user.id, status: 'active' }).eq('id', part.id)
-      await sb.from('rounds').update({ responder_id: data.user.id }).eq('partnership_id', part.id).is('responder_id', null)
-    }
+    // Accept the invite via SECURITY DEFINER function (bypasses RLS)
+    await sb.rpc('accept_invite', { invite_token_param: inviteToken, accepting_user_id: data.user.id })
     await loadUserData(data.user.id)
   }
 
