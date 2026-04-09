@@ -236,11 +236,16 @@ export default function App() {
         })
     }
 
-    // If a session already exists, jump straight to the dashboard.
-    sb.auth.getSession().then(({ data: { session } }) => {
+    // If a session already exists, handle accordingly.
+    sb.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
+        // If the user already has a session AND arrived via invite link,
+        // auto-accept the invite before loading the dashboard.
+        if (initialToken) {
+          await sb.rpc('accept_invite', { invite_token_param: initialToken, accepting_user_id: session.user.id })
+        }
         setUser(session.user)
-        loadUserData(session.user.id)
+        await loadUserData(session.user.id)
       }
     })
   }, [])
