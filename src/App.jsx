@@ -3,14 +3,15 @@ import { sb, callEmail, genToken } from './supabase.js'
 
 // ─── Styles ────────────────────────────────────────────────────────────────
 const G = {
-  gold: '#C8A96E', dark: '#1C1C1C', cream: '#F7F4EF',
-  border: '#E5DDD0', start: '#E8A87C', stop: '#C9A0C5',
-  green: '#A8C5A0', blue: '#7EB8C9',
+  purple: '#A06CD5', darkPurple: '#7B4FA8', dark: '#1a1a1a', cream: '#F7F4EF',
+  border: '#e0dcd7', start: '#3AAFB9', stop: '#C60F7B',
+  green: '#22c55f', blue: '#3AAFB9',
 }
+const font = "'Montserrat', sans-serif"
 
 const css = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { font-family: 'Palatino Linotype', Palatino, Georgia, serif; background: ${G.cream}; color: ${G.dark}; min-height: 100vh; overflow-x: hidden; }
+  html, body { font-family: ${font}; background: ${G.cream}; color: ${G.dark}; min-height: 100vh; overflow-x: hidden; }
   input, textarea, select, button { font-family: inherit; }
   button { cursor: pointer; }
   textarea { resize: vertical; }
@@ -21,23 +22,22 @@ const css = `
 // ─── Shared UI ─────────────────────────────────────────────────────────────
 const Btn = ({ children, onClick, variant = 'primary', disabled, style = {}, small }) => {
   const base = {
-    border: 'none', letterSpacing: '0.18em', cursor: disabled ? 'default' : 'pointer',
-    padding: small ? '0.55rem 1rem' : '0.9rem 1.5rem',
-    fontSize: small ? '0.78rem' : '0.85rem',
-    transition: 'all 0.2s', fontFamily: 'inherit',
+    border: 'none', letterSpacing: '0.15em', cursor: disabled ? 'default' : 'pointer',
+    padding: small ? '0.55rem 1.2rem' : '1rem 2rem',
+    fontSize: small ? '0.82rem' : '0.9rem', fontWeight: 600,
+    transition: 'all 0.2s', fontFamily: 'inherit', borderRadius: 3,
     width: small ? 'auto' : '100%',
   }
   const variants = {
-    primary: { background: disabled ? '#ddd' : G.dark, color: disabled ? '#aaa' : G.gold },
-    outline: { background: '#fff', color: '#666', border: `1px solid ${G.border}` },
-    gold: { background: G.gold, color: '#fff' },
+    primary: { background: disabled ? '#ddd' : G.purple, color: disabled ? '#aaa' : '#fff' },
+    outline: { background: '#fff', color: G.purple, border: `1px solid ${G.purple}` },
   }
   return <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...variants[variant], ...style }}>{children}</button>
 }
 
 const Field = ({ label, children }) => (
   <div style={{ marginBottom: '1.2rem' }}>
-    {label && <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', color: '#888', marginBottom: '0.4rem' }}>{label}</div>}
+    {label && <div style={{ fontSize: '0.8rem', letterSpacing: '0.18em', color: '#777', marginBottom: '0.4rem', fontWeight: 500 }}>{label}</div>}
     {children}
   </div>
 )
@@ -49,7 +49,7 @@ const Input = ({ id, type = 'text', placeholder, value, onChange, onKeyDown, aut
     autoComplete={autoComplete}
     style={{
       width: '100%', border: 'none',
-      borderBottom: `2px solid ${borderColor || G.gold}`,
+      borderBottom: `2px solid ${borderColor || G.purple}`,
       background: 'transparent', padding: '0.5rem 0.2rem',
       fontSize: 'clamp(1rem, 4vw, 1.1rem)', color: G.dark, outline: 'none',
     }}
@@ -61,7 +61,7 @@ const TextArea = ({ id, placeholder, value, onChange, rows = 4, borderColor }) =
     id={id} placeholder={placeholder} value={value} onChange={onChange} rows={rows}
     style={{
       width: '100%', border: 'none',
-      borderBottom: `2px solid ${borderColor || G.gold}`,
+      borderBottom: `2px solid ${borderColor || G.purple}`,
       background: 'transparent', padding: '0.5rem 0.2rem',
       fontSize: 'clamp(0.95rem, 3.5vw, 1rem)', color: G.dark, outline: 'none',
       lineHeight: 1.8, resize: 'vertical',
@@ -71,19 +71,20 @@ const TextArea = ({ id, placeholder, value, onChange, rows = 4, borderColor }) =
 
 const Card = ({ children, style = {}, borderLeft }) => (
   <div style={{
-    background: '#fff', border: `1px solid ${G.border}`,
-    borderLeft: borderLeft ? `4px solid ${borderLeft}` : undefined,
-    padding: 'clamp(1.2rem, 5vw, 1.8rem)', marginBottom: '1rem', ...style,
+    background: '#fff', border: `1px solid ${G.border}`, borderRadius: 4,
+    borderLeft: borderLeft ? `3px solid ${borderLeft}` : undefined,
+    padding: 'clamp(1.2rem, 5vw, 1.8rem)', marginBottom: '1rem',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.06)', ...style,
   }}>{children}</div>
 )
 
 const CardTitle = ({ children, color }) => (
-  <div style={{ fontSize: '0.7rem', letterSpacing: '0.25em', color: color || G.gold, marginBottom: '0.8rem' }}>{children}</div>
+  <div style={{ fontSize: '0.8rem', letterSpacing: '0.25em', color: color || G.purple, marginBottom: '0.8rem', fontWeight: 700 }}>{children}</div>
 )
 
 const DescBox = ({ children, color }) => (
   <div style={{
-    background: '#fff', borderLeft: `4px solid ${color || G.gold}`,
+    background: '#fff', borderLeft: `4px solid ${color || G.purple}`,
     padding: '0.9rem 1.1rem', marginBottom: '1.2rem',
     fontSize: 'clamp(0.92rem, 3.5vw, 1rem)', color: '#555', lineHeight: 1.8,
   }}>{children}</div>
@@ -91,7 +92,7 @@ const DescBox = ({ children, color }) => (
 
 const InfoBox = ({ children }) => (
   <div style={{
-    borderTop: `2px solid ${G.gold}`, borderBottom: `2px solid ${G.gold}`,
+    borderTop: `2px solid ${G.purple}`, borderBottom: `2px solid ${G.purple}`,
     padding: '1.2rem 1.5rem', margin: '1.2rem 0',
     fontStyle: 'italic', color: '#555', textAlign: 'center',
     fontSize: 'clamp(0.92rem, 3.5vw, 1rem)', lineHeight: 1.8,
@@ -123,14 +124,14 @@ const ReqBlock = ({ text, type }) => (
 const Pill = ({ label, active, activeClass, onClick }) => {
   const activeColors = {
     accept: { background: G.green, borderColor: G.green, color: '#fff' },
-    compromise: { background: G.gold, borderColor: G.gold, color: '#fff' },
+    compromise: { background: G.purple, borderColor: G.purple, color: '#fff' },
     reject: { background: '#C9A0A0', borderColor: '#C9A0A0', color: '#fff' },
   }
   const style = {
     flex: 1, minWidth: 80, padding: '0.7rem 0.5rem', textAlign: 'center',
-    border: `2px solid ${G.border}`, background: '#fff', color: '#555',
+    border: `2px solid ${G.border}`, background: '#fff', color: '#555', borderRadius: 3,
     fontSize: 'clamp(0.88rem, 3vw, 0.95rem)', cursor: 'pointer',
-    fontFamily: 'inherit', transition: 'all 0.2s',
+    fontFamily: 'inherit', transition: 'all 0.2s', fontWeight: 500,
     ...(active && activeClass ? activeColors[activeClass] : {}),
   }
   return <button style={style} onClick={onClick}>{label}</button>
@@ -144,7 +145,7 @@ const Stepper = ({ steps, current }) => (
           <div style={{
             width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '0.9rem', flexShrink: 0,
-            background: current === i ? s.color : current > i ? G.dark : '#fff',
+            background: current === i ? s.color : current > i ? s.color : '#fff',
             color: current === i ? '#fff' : current > i ? s.color : '#bbb',
             border: `2px solid ${current >= i ? s.color : '#ddd'}`,
           }}>
@@ -155,7 +156,7 @@ const Stepper = ({ steps, current }) => (
           </div>
         </div>
         {i < steps.length - 1 && (
-          <div style={{ width: 'clamp(14px,4vw,30px)', height: 1, background: current > i ? G.gold : '#ddd', margin: '0 2px', marginBottom: '1.2rem', flexShrink: 0 }} />
+          <div style={{ width: 'clamp(14px,4vw,30px)', height: 1, background: current > i ? G.purple : '#ddd', margin: '0 2px', marginBottom: '1.2rem', flexShrink: 0 }} />
         )}
       </div>
     ))}
@@ -482,7 +483,7 @@ export default function App() {
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
   // ─── Views ─────────────────────────────────────────────────────────────
-  if (view === 'loading') return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: "'Palatino Linotype',serif", color: '#C8A96E', fontStyle: 'italic' }}>Loading...</div>
+  if (view === 'loading') return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: font, color: '#C8A96E', fontStyle: 'italic' }}>Loading...</div>
 
   const pA = profile?.name ?? 'You'
   const pB = partnerProfile?.name ?? 'Your Partner'
@@ -493,10 +494,10 @@ export default function App() {
       <style>{css}</style>
 
       {/* Header */}
-      <div style={{ background: G.dark, padding: '1.4rem 1rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', marginBottom: '0.3rem' }}>A FRAMEWORK FOR HONEST CONVERSATION</div>
-        <h1 style={{ color: G.gold, fontSize: 'clamp(1.9rem, 7vw, 2.8rem)', fontWeight: 400 }}>Deal Breakers</h1>
-        <p style={{ color: '#aaa', fontSize: 'clamp(0.82rem, 3vw, 0.95rem)', fontStyle: 'italic', marginTop: '0.3rem' }}>
+      <div style={{ background: 'linear-gradient(135deg, #A06CD5 0%, #7B4FA8 100%)', padding: '1.6rem 1rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.75rem', letterSpacing: '0.3em', color: 'rgba(255,255,255,0.6)', marginBottom: '0.4rem', fontWeight: 600 }}>A FRAMEWORK FOR HONEST CONVERSATION</div>
+        <h1 style={{ color: '#fff', fontSize: 'clamp(2rem, 7vw, 2.8rem)', fontWeight: 700 }}>Deal Breakers</h1>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(0.88rem, 3vw, 1rem)', fontStyle: 'italic', marginTop: '0.4rem' }}>
           Starting and stopping behaviours that compromise your relationship.
         </p>
       </div>
@@ -511,8 +512,8 @@ export default function App() {
                 {['login', 'signup'].map(t => (
                   <button key={t} onClick={() => { setAuthTab(t); setError('') }} style={{
                     flex: 1, padding: '0.7rem', background: 'none', border: 'none', cursor: 'pointer',
-                    borderBottom: `2px solid ${authTab === t ? G.gold : 'transparent'}`,
-                    color: authTab === t ? G.gold : '#aaa',
+                    borderBottom: `2px solid ${authTab === t ? G.purple : 'transparent'}`,
+                    color: authTab === t ? G.purple : '#aaa',
                     fontSize: '0.82rem', letterSpacing: '0.15em', marginBottom: '-2px', fontFamily: 'inherit',
                   }}>{t === 'login' ? 'LOG IN' : 'SIGN UP'}</button>
                 ))}
@@ -529,7 +530,7 @@ export default function App() {
               </form>
               {authTab === 'login' && (
                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                  <button onClick={showForgotPassword} style={{ background: 'none', border: 'none', color: G.gold, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem' }}>
+                  <button onClick={showForgotPassword} style={{ background: 'none', border: 'none', color: G.purple, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem' }}>
                     Forgot password?
                   </button>
                 </div>
@@ -606,7 +607,7 @@ export default function App() {
                 <Card>
                   <CardTitle>YOUR PARTNERSHIP</CardTitle>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', padding: '0.9rem', background: G.cream, border: `1px solid ${G.border}` }}>
-                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: partnerProfile ? G.dark : '#aaa', color: G.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: partnerProfile ? G.dark : '#aaa', color: G.purple, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
                       {partnerProfile ? (partnerProfile.name?.[0] ?? '?').toUpperCase() : '?'}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -657,7 +658,7 @@ export default function App() {
                       const statusText = { complete: '#2d6a2d', responded: '#1a5a7a', in_progress: '#1a5a7a', submitted: '#996633', draft: '#996633' }
                       return (
                         <div key={r.id} style={{ border: `1px solid ${G.border}`, background: '#fff', marginBottom: '0.8rem' }}>
-                          <div style={{ background: G.dark, color: G.gold, padding: '0.7rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', letterSpacing: '0.1em' }}>
+                          <div style={{ background: 'linear-gradient(135deg, #A06CD5 0%, #7B4FA8 100%)', color: '#fff', padding: '0.7rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', letterSpacing: '0.1em' }}>
                             <span>ROUND {r.round_number}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                               {myTurn && <span style={{ color: G.start, fontSize: '0.72rem' }}>● YOUR TURN</span>}
@@ -708,7 +709,7 @@ export default function App() {
               steps={[
                 { id: 'start', label: 'Start', icon: '△', color: G.start },
                 { id: 'stop', label: 'Stop', icon: '▽', color: G.stop },
-                { id: 'submit', label: 'Submit', icon: '✦', color: G.gold },
+                { id: 'submit', label: 'Submit', icon: '✦', color: G.purple },
               ]}
               current={roundStep}
             />
@@ -764,7 +765,7 @@ export default function App() {
                 {activeRound?.start_request && <ReqBlock text={activeRound.start_request} type="start" />}
                 {activeRound?.stop_request && <ReqBlock text={activeRound.stop_request} type="stop" />}
                 {!activeRound?.responder_id && (
-                  <Card style={{ background: '#FDF6EC', border: `1px dashed ${G.gold}`, marginTop: '1rem' }}>
+                  <Card style={{ background: '#FDF6EC', border: `1px dashed ${G.purple}`, marginTop: '1rem' }}>
                     <p style={{ fontSize: '0.9rem', color: '#7a5a1a', lineHeight: 1.7, margin: 0 }}>
                       <strong>Waiting on your partner —</strong> your invite is still pending. You can keep editing this draft, and you'll be able to submit it as soon as your partner accepts the invite.
                     </p>
@@ -817,7 +818,7 @@ export default function App() {
                   {resp === 'compromised' && (
                     <div style={{ marginTop: '0.8rem' }}>
                       <p style={{ fontSize: '0.88rem', color: '#555', marginBottom: '0.4rem' }}>Describe your compromise:</p>
-                      <TextArea id={compId} placeholder="I would be willing to commit if..." rows={3} borderColor={G.gold} defaultValue={comp ?? ''} />
+                      <TextArea id={compId} placeholder="I would be willing to commit if..." rows={3} borderColor={G.purple} defaultValue={comp ?? ''} />
                     </div>
                   )}
                   {resp === 'rejected' && (
@@ -848,7 +849,7 @@ export default function App() {
           <>
             <Btn variant="outline" small onClick={() => setView('dashboard')} style={{ marginBottom: '1rem' }}>← BACK</Btn>
             <div style={{ border: `1px solid ${G.border}`, background: '#fff' }}>
-              <div style={{ background: G.dark, color: G.gold, padding: '0.8rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', letterSpacing: '0.1em' }}>
+              <div style={{ background: 'linear-gradient(135deg, #A06CD5 0%, #7B4FA8 100%)', color: '#fff', padding: '0.8rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', letterSpacing: '0.1em' }}>
                 <span>ROUND {activeRound.round_number}</span>
                 <span style={{ fontSize: '0.65rem', letterSpacing: '0.12em', padding: '2px 8px', background: activeRound.status === 'complete' ? '#EDF7ED' : '#EDF4F7', color: activeRound.status === 'complete' ? '#2d6a2d' : '#1a5a7a', border: '1px solid currentColor' }}>
                   {activeRound.status.toUpperCase().replace('_', ' ')}
@@ -869,7 +870,7 @@ export default function App() {
                   const dl = isStart ? activeRound.start_deadline : activeRound.stop_deadline
                   const comp = isStart ? activeRound.start_compromise_text : activeRound.stop_compromise_text
                   const respLabel = { accepted: '✓ Accepted', compromised: '~ Compromised', rejected: '✗ Rejected' }
-                  const respColor = { accepted: G.green, compromised: G.gold, rejected: '#C9A0A0' }
+                  const respColor = { accepted: G.green, compromised: G.purple, rejected: '#C9A0A0' }
 
                   return (
                     <div key={type} style={{ marginBottom: '1.2rem' }}>
@@ -950,7 +951,7 @@ export default function App() {
               }
             )}
 
-            <Card style={{ border: `1px solid ${G.gold}` }}>
+            <Card style={{ border: `1px solid ${G.purple}` }}>
               <CardTitle>NEXT STEPS</CardTitle>
               <p style={{ fontSize: '0.95rem', color: '#555', lineHeight: 1.8 }}>
                 Once this round is complete, swap roles. {pB} becomes the Requesting Partner and {pA} becomes the Responding Partner.
